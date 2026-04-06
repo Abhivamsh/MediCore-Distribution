@@ -336,4 +336,20 @@ describe('Security Configuration', () => {
     const content = fs.readFileSync(path.join(SERVICES_DIR, 'inventory-service', 'src', 'routes', 'inventory.js'), 'utf8');
     expect(content).toContain('max: 18');
   });
+
+  test('notification-service uses nodemailer >=7.0.11 (fixes CVE DoS and domain confusion)', () => {
+    const pkg = JSON.parse(
+      fs.readFileSync(path.join(SERVICES_DIR, 'notification-service', 'package.json'), 'utf8')
+    );
+    const spec = pkg.dependencies.nodemailer;
+    // Strip leading range operator (^, ~, >=, etc.) to get the minimum version
+    const minVersion = spec.replace(/^[^0-9]*/, '');
+    const [major, minor, patch] = minVersion.split('.').map(Number);
+    // Must be >= 7.0.11
+    const isPatched =
+      major > 7 ||
+      (major === 7 && minor > 0) ||
+      (major === 7 && minor === 0 && patch >= 11);
+    expect(isPatched).toBe(true);
+  });
 });
